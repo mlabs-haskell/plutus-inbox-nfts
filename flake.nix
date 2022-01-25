@@ -1,5 +1,5 @@
 {
-  description = "liquidity-bridge";
+  description = "plutus-inbox-nfts";
 
   inputs.haskell-nix.url = "github:input-output-hk/haskell.nix";
   inputs.nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
