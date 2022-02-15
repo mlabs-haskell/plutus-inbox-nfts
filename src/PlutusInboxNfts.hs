@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedRecordDot #-}
 module PlutusInboxNfts (validator) where
 
 import Plutarch.Prelude
@@ -9,44 +8,17 @@ import Plutarch.Api.V1
   , PScriptPurpose (PSpending)
   , PTokenName
   , PTxOut
-  , PValue
   )
-
--- | Find the first element that matches the predicate. Partial, throws an error if there's no matching elements.
--- I'm not sure whether it's better than 'phead' after 'pfilter'.
-pfindJust :: PIsListLike list a => Term s ((a :--> PBool) :--> list a :--> a)
-pfindJust = phoistAcyclic $
-  plam $ \predicate ->
-    precList
-      ( \self x' xs -> plet x' $ \x ->
-          pif
-            (predicate # x)
-            x
-            (self # xs)
-      )
-      (const perror)
-
--- | Get the quantity of the given currency in the 'PValue'.
-pvalueOf :: Term s (PValue :--> PCurrencySymbol :--> PTokenName :--> PInteger)
-pvalueOf = phoistAcyclic $ plam $ \v expectedCS expectedTN -> P.do
-  csMap <- plet $ pto $ pto v
-  filteredCSMap <- plet $ pfilter # (plam $ \(pfromData . (pfstBuiltin #) -> cs) -> cs #== expectedCS) # csMap
-  pmatch filteredCSMap $ \case
-    PNil -> 0
-    PCons csHead _ -> P.do
-      tnMap <- plet $ pfromData $ psndBuiltin # csHead
-      filteredTNMap <- plet $ pfilter # (plam $ \(pfromData . (pfstBuiltin #) -> tn) -> tn #== expectedTN) # pto tnMap
-      pmatch filteredTNMap $ \case
-        PNil -> 0
-        PCons tnHead _ -> pfromData $ psndBuiltin # tnHead
+import PlutusInboxNfts.Utils
+  ( passert
+  , pfindJust
+  , pvalueOf
+  )
 
 txOutHasNft :: Term s (PCurrencySymbol :--> PTokenName :--> PAsData PTxOut :--> PBool)
 txOutHasNft = phoistAcyclic $ plam $ \nftCS nftTN txOut -> P.do
   let value = pfromData $ pfield @"value" # txOut
   pvalueOf # value # nftCS # nftTN #== 1
-
-passert :: forall (s :: S) (a :: PType). Term s PBool -> Term s a -> Term s a
-passert b inp = pif b inp perror
 
 validator :: Term s (PCurrencySymbol :--> PTokenName :--> PData :--> PData :--> PScriptContext :--> PUnit)
 validator = plam $ \nftCS nftTN _ _ ctx' -> P.do

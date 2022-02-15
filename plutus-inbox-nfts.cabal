@@ -59,6 +59,7 @@ common common-lang
     GADTSyntax
     GeneralisedNewtypeDeriving
     HexFloatLiterals
+    ImplicitParams
     ImplicitPrelude
     ImportQualifiedPost
     InstanceSigs
@@ -69,6 +70,7 @@ common common-lang
     NamedFieldPuns
     NamedWildCards
     NumericUnderscores
+    OverloadedRecordDot
     OverloadedStrings
     PartialTypeSignatures
     PatternGuards
@@ -96,6 +98,7 @@ library
   import:          common-lang
   exposed-modules:
     PlutusInboxNfts
+    PlutusInboxNfts.Utils
   build-depends:
     plutarch
 --  , aeson               ^>=1.5.0.0
@@ -130,6 +133,10 @@ test-suite plutus-inbox-nfts-test
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
 --  ghc-options:    -fplugin-opt PlutusTx.Plugin:defer-errors
+  other-modules:
+    Test.PlutusInboxNfts.Unit
+    Test.PlutusInboxNfts.Unit.Validator
+    Utils
   build-depends:
 --  , aeson                        ^>=1.5.0.0
 --  , base
@@ -145,9 +152,9 @@ test-suite plutus-inbox-nfts-test
     , plutus-inbox-nfts
 --  , playground-common
 --  , plutus-contract
---  , plutus-core
+    , plutus-core
 --  , plutus-ledger
---  , plutus-ledger-api
+    , plutus-ledger-api
 --  , plutus-pab
 --  , plutus-tx
 --  , plutus-tx-plugin
@@ -160,8 +167,9 @@ test-suite plutus-inbox-nfts-test
 --  , servant
 --  , servant-server
     , tasty
+    , tasty-hunit
     , tasty-quickcheck
---  , text                         ^>=1.2.4.0
+    , text                         ^>=1.2.4.0
 --  , vector                       ^>=0.12.1.2
 --  , wai
 --  , warp
