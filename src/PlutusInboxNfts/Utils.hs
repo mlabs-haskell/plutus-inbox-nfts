@@ -1,4 +1,8 @@
-module PlutusInboxNfts.Utils (pfindJust, pvalueOf, passert) where
+module PlutusInboxNfts.Utils
+  ( isSubsetOf
+  , pfindJust
+  , pvalueOf
+  , passert) where
 
 import Plutarch.Prelude
 import Plutarch.Monadic qualified as P
@@ -38,4 +42,19 @@ pvalueOf = phoistAcyclic $ plam $ \v expectedCS expectedTN -> P.do
 
 passert :: forall (s :: S) (a :: PType). Term s PBool -> Term s a -> Term s a
 passert b inp = pif b inp perror
+
+-- | isSubsetOf a b checks that every asset class of a is also in b
+isSubsetOf :: Term s (PValue :--> PValue :--> PBool)
+isSubsetOf = phoistAcyclic $ plam $ \subset superset -> P.do
+  let forEachCS = plam $ \csPair -> P.do
+        cs <- plet $ pfromData $ pfstBuiltin # csPair
+        tnMap <- plet $ pto $ pfromData $ psndBuiltin # csPair
+        pall # forEachTN cs # tnMap
+
+      forEachTN cs = plam $ \tnPair -> P.do
+        tn <- plet $ pfromData $ pfstBuiltin # tnPair
+        amount <- plet $ pfromData $ psndBuiltin # tnPair
+        amount #== 0 #|| 0 #< pvalueOf # superset # cs # tn
+        
+  pall # forEachCS #$ pto $ pto subset
 

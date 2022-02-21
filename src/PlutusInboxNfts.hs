@@ -10,7 +10,8 @@ import Plutarch.Api.V1
   , PTxOut
   )
 import PlutusInboxNfts.Utils
-  ( passert
+  ( isSubsetOf
+  , passert
   , pfindJust
   , pvalueOf
   )
@@ -35,7 +36,7 @@ validator = plam $ \nftCS nftTN _ _ ctx' -> P.do
     pfield @"value" #$
     pfield @"resolved" #$
     pfindJust # txInHasNft # inputs
-  outputValue <- plet $ pto $ pto $ pfromData $
+  outputValue <- plet $ pfromData $
     pfield @"value" #$
     pfindJust # txOutHasNft' # outputs
   spentUtxo <- plet $ pfield @"_0" # spentUtxo'
@@ -43,6 +44,11 @@ validator = plam $ \nftCS nftTN _ _ ctx' -> P.do
     pfield @"value" #$
     pfield @"resolved" #$
     pfindJust # plam (\input -> pfield @"outRef" # input #== spentUtxo) # inputs
+
+  -- check that outputValue has all necessary asset classes
+
+  passert $ isSubsetOf # inputValue # outputValue
+  passert $ isSubsetOf # spentValue # outputValue
 
   -- check that inputValue + spentValue == outputValue
 
@@ -56,6 +62,6 @@ validator = plam $ \nftCS nftTN _ _ ctx' -> P.do
         val <- plet $ pfromData $ psndBuiltin # tnPair
         val #== pvalueOf # inputValue # cs # tn + pvalueOf # spentValue # cs # tn
 
-  passert $ pall # csPairAddsUp # outputValue
+  passert $ pall # csPairAddsUp #$ pto $ pto outputValue
   pcon PUnit
 

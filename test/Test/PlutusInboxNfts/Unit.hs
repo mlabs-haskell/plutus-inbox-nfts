@@ -4,7 +4,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Plutarch.Prelude
-import Plutus.V1.Ledger.Value (singleton)
+import Plutus.V1.Ledger.Value (TokenName, Value, singleton)
 
 import PlutusInboxNfts.Utils
 
@@ -18,6 +18,7 @@ tests = do
     "Unit tests"
     [ pvalueOfTests
     , passertTests
+    , isSubsetOfTests
     , Validator.tests
     ]
 
@@ -43,3 +44,32 @@ passertTests = do
         fails $ passert (pconstant False) (pconstant ())
     ]
 
+-- | Construct a value of n coins of some currency identified by token name; just for brevity
+coins :: TokenName -> Integer -> Value
+coins = singleton "c3"
+
+isSubsetOfTests :: HasTester => TestTree
+isSubsetOfTests = do
+  testGroup
+    "isSubsetOf tests"
+    [ testCase "proper subset" $ do
+        expect $ isSubsetOf
+          # (pconstant $ coins "A" 1 <> coins "B" 2)
+          # (pconstant $ coins "B" 2 <> coins "A" 3 <> coins "C" 5)
+    , testCase "same set is subset" $ do
+        expect $ isSubsetOf
+          # (pconstant $ coins "A" 1 <> coins "B" 2)
+          # (pconstant $ coins "B" 2 <> coins "A" 3)
+    , testCase "not subset" $ do
+        expect $ pnot #$ isSubsetOf
+          # (pconstant $ coins "A" 1 <> coins "B" 2 <> coins "C" 5)
+          # (pconstant $ coins "B" 2 <> coins "A" 3)
+    , testCase "edge case: 0 in the subset" $ do
+        expect $ isSubsetOf
+          # (pconstant $ coins "A" 1 <> coins "B" 2 <> coins "C" 0)
+          # (pconstant $ coins "B" 2 <> coins "A" 3)
+    , testCase "edge case: 0 in the superset" $ do
+        expect $ pnot #$ isSubsetOf
+          # (pconstant $ coins "A" 1 <> coins "B" 2)
+          # (pconstant $ coins "B" 2 <> coins "A" 0)
+    ]

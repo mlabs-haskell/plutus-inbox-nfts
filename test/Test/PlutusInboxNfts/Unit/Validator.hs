@@ -108,7 +108,11 @@ tests = do
         succeeds $ runValidatorWithCtx # buildCtx lockedValue [inputValue] [lockedValue <> inputValue]
     , testCase "fails; no NFT" $ do
         fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [coins "A" 20] [coins "A" 30]
-    , testCase "fails; should transfer all the locked value to the NFT" $ do
+    , testCase "fails; amount of some asset class differs" $ do
         fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [nftCoin] [nftCoin <> coins "A" 5, coins "A" 5]
+    , testCase "fails; lacks some amount of an asset class at output" $ do
+        fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [nftCoin] [nftCoin]
+    , testCase "fails; redundant asset class at output" $ do
+        fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [nftCoin] [nftCoin <> coins "A" 10 <> coins "B" 10]
     ]
 
