@@ -147,8 +147,8 @@ readme_contents:
 
 # Target to use as dependency to fail if not inside nix-shell
 requires_nix_shell:
-	@ [ "$(IN_NIX_SHELL)" ] || echo "The $(MAKECMDGOALS) target must be run from inside a nix shell"
-	@ [ "$(IN_NIX_SHELL)" ] || (echo "    run 'nix develop' first" && false)
+	@ [[ "$(PATH)" == *"/nix/store/"* ]] || echo "The $(MAKECMDGOALS) target must be run from inside a nix shell"
+	@ [[ "$(PATH)" == *"/nix/store/"* ]] || (echo "    run 'nix develop' first" && false)
 
 
 PLUTUS_BRANCH = $(shell jq '.plutus.branch' ./nix/sources.json )
