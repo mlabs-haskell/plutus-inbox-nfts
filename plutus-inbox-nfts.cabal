@@ -98,9 +98,11 @@ library
   import:          common-lang
   exposed-modules:
     PlutusInboxNfts
+    PlutusInboxNfts.Types
     PlutusInboxNfts.Utils
   build-depends:
     plutarch
+    , generics-sop
 --  , aeson               ^>=1.5.0.0
 --  , bytestring          ^>=0.10.12.0
 --  , cardano-prelude

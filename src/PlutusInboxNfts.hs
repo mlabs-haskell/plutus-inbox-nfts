@@ -1,4 +1,4 @@
-module PlutusInboxNfts (validator) where
+module PlutusInboxNfts (validatorByDatum, validatorByParams) where
 
 import Plutarch.Prelude
 import Plutarch.Monadic qualified as P
@@ -9,6 +9,7 @@ import Plutarch.Api.V1
   , PTokenName
   , PTxOut
   )
+import PlutusInboxNfts.Types (PAssetClass)
 import PlutusInboxNfts.Utils
   ( isSubsetOf
   , passert
@@ -21,8 +22,21 @@ txOutHasNft = phoistAcyclic $ plam $ \nftCS nftTN txOut -> P.do
   let value = pfromData $ pfield @"value" # txOut
   pvalueOf # value # nftCS # nftTN #== 1
 
-validator :: Term s (PCurrencySymbol :--> PTokenName :--> PData :--> PData :--> PScriptContext :--> PUnit)
-validator = plam $ \nftCS nftTN _ _ ctx' -> P.do
+-- | The validator that knows what NFT to check from the parameters.
+validatorByParams :: Term s (PCurrencySymbol :--> PTokenName :--> PData :--> PData :--> PScriptContext :--> PUnit)
+validatorByParams = plam $ \nftCS nftTN _ _ ctx -> validatorLogic # nftCS # nftTN # ctx
+
+validatorByDatum :: Term s (PData :--> PAsData PAssetClass :--> PScriptContext :--> PUnit)
+validatorByDatum = phoistAcyclic $ plam $ \_ datum' ctx -> P.do
+  datum <- pletFields @'["currencySymbol", "tokenName"] datum'
+  validatorLogic
+    # pfromData datum.currencySymbol
+    # pfromData datum.tokenName
+    # ctx
+
+-- | The validator that knows what NFT to check from the datum
+validatorLogic :: Term s (PCurrencySymbol :--> PTokenName :--> PScriptContext :--> PUnit)
+validatorLogic = phoistAcyclic $ plam $ \nftCS nftTN ctx' -> P.do
   ctx <- pletFields @'["txInfo", "purpose"] ctx'
   PSpending spentUtxo' <- pmatch $ pfromData ctx.purpose
   txInfo <- pletFields @'["inputs", "outputs"] ctx.txInfo
@@ -45,6 +59,8 @@ validator = plam $ \nftCS nftTN _ _ ctx' -> P.do
     pfield @"resolved" #$
     pfindJust # plam (\input -> pfield @"outRef" # input #== spentUtxo) # inputs
 
+  -- the following could be greatly simplified with some API for working with PValues
+
   -- check that outputValue has all necessary asset classes
 
   passert $ isSubsetOf # inputValue # outputValue
@@ -64,4 +80,4 @@ validator = plam $ \nftCS nftTN _ _ ctx' -> P.do
 
   passert $ pall # csPairAddsUp #$ pto $ pto outputValue
   pcon PUnit
-
+  
