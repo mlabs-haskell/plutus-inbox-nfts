@@ -795,11 +795,11 @@
         "th-extras": "th-extras"
       },
       "locked": {
-        "lastModified": 1643305179,
-        "narHash": "sha256-yduLdouK9UyyR3b46qvqO73Fg98816Bt2fHbJj2LeIc=",
+        "lastModified": 1645717044,
+        "narHash": "sha256-xRPL2RG70yMkRUTNMKpV1aTCkvBsw1Uq5AV7c2v7Js8=",
         "owner": "Plutonomicon",
         "repo": "plutarch",
-        "rev": "7c6421735de75f76b2c8ecdc441ab1296b5d3f11",
+        "rev": "56f7cf7f32bf71a52343c142d3320e4198174a3b",
         "type": "github"
       },
       "original": {

@@ -8,8 +8,10 @@ import Plutus.V1.Ledger.Interval qualified as Interval
 
 import Plutarch.Api.V1
 import Plutarch.Prelude
+import Plutarch (ClosedTerm)
 
-import PlutusInboxNfts (validator)
+import PlutusInboxNfts (validatorByDatum, validatorByParams)
+import PlutusInboxNfts.Types (mkPAssetClass)
 
 import Utils
 
@@ -92,27 +94,44 @@ nftCS = "c1"
 nftTN :: TokenName
 nftTN = "NFT"
 
-runValidatorWithCtx :: Term s (PScriptContext :--> PUnit)
-runValidatorWithCtx = phoistAcyclic $
-  plam $ \ctx ->
-    let unit = pconstant (I 0)
-    in validator # pconstant nftCS # pconstant nftTN # unit # unit # ctx
-
 tests :: HasTester => TestTree
-tests = do
+tests =
   testGroup
     "validator tests"
-    [ testCase "success path" $ do
+    [ validatorTestGroup "passing NFT as params" runValidatorByParamsWithCtx
+    , validatorTestGroup "passing NFT as datum" runValidatorByDatumWithCtx
+    ]
+
+type ValidatorRunner = ClosedTerm (PScriptContext :--> PUnit)
+
+runValidatorByParamsWithCtx :: ValidatorRunner
+runValidatorByParamsWithCtx = phoistAcyclic $
+  plam $ \ctx ->
+    let unit = pconstant (I 0)
+    in validatorByParams # pconstant nftCS # pconstant nftTN # unit # unit # ctx
+
+runValidatorByDatumWithCtx :: ValidatorRunner
+runValidatorByDatumWithCtx = phoistAcyclic $
+  plam $ \ctx ->
+    let unit = pconstant (I 0)
+        ac = mkPAssetClass # pconstant nftCS # pconstant nftTN
+    in validatorByDatum # unit # pdata ac # ctx
+
+validatorTestGroup :: HasTester => TestName -> ValidatorRunner -> TestTree
+validatorTestGroup groupName validator = do
+  testGroup
+    groupName
+    [ testCase "success path" $  do
         let lockedValue = coins "A" 10
             inputValue = coins "A" 20 <> nftCoin
-        succeeds $ runValidatorWithCtx # buildCtx lockedValue [inputValue] [lockedValue <> inputValue]
+        succeeds $ validator # buildCtx lockedValue [inputValue] [lockedValue <> inputValue]
     , testCase "fails; no NFT" $ do
-        fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [coins "A" 20] [coins "A" 30]
+        fails $ validator # buildCtx (coins "A" 10) [coins "A" 20] [coins "A" 30]
     , testCase "fails; amount of some asset class differs" $ do
-        fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [nftCoin] [nftCoin <> coins "A" 5, coins "A" 5]
+        fails $ validator # buildCtx (coins "A" 10) [nftCoin] [nftCoin <> coins "A" 5, coins "A" 5]
     , testCase "fails; lacks some amount of an asset class at output" $ do
-        fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [nftCoin] [nftCoin]
+        fails $ validator # buildCtx (coins "A" 10) [nftCoin] [nftCoin]
     , testCase "fails; redundant asset class at output" $ do
-        fails $ runValidatorWithCtx # buildCtx (coins "A" 10) [nftCoin] [nftCoin <> coins "A" 10 <> coins "B" 10]
+        fails $ validator # buildCtx (coins "A" 10) [nftCoin] [nftCoin <> coins "A" 10 <> coins "B" 10]
     ]
 
