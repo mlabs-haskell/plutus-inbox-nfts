@@ -12,7 +12,7 @@ maintainer:         TODO
 copyright:          TODO
 category:           TODO
 build-type:         Simple
-tested-with:        GHC ==8.10.4
+tested-with:        GHC ==9.2.1
 extra-source-files: README.md
 
 source-repository head
@@ -24,48 +24,71 @@ source-repository head
 
 common common-lang
   ghc-options:
-    -Wall -Wcompat -Wincomplete-record-updates
-    -Wincomplete-uni-patterns -Wredundant-constraints -Werror
-    -fobject-code -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas -fplugin=RecordDotPreprocessor
+    -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
+    -Wno-partial-type-signatures -Wmissing-export-lists -Werror
+    -Wincomplete-record-updates -Wmissing-deriving-strategies
+    -Wno-name-shadowing -Wunused-foralls -fprint-explicit-foralls
+    -fprint-explicit-kinds
 
-  build-depends:
-    , base                     ^>=4.14
-    , record-dot-preprocessor
-    , record-hasfield
-
+  build-depends:      base >=4.14
   default-extensions:
-    NoImplicitPrelude
+    NoStarIsType
     BangPatterns
     BinaryLiterals
+    ConstrainedClassMethods
     ConstraintKinds
     DataKinds
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
     DeriveFunctor
     DeriveGeneric
+    DeriveLift
     DeriveTraversable
     DerivingStrategies
     DerivingVia
-    DuplicateRecordFields
+    DoAndIfThenElse
     EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
     FlexibleContexts
     FlexibleInstances
-    GADTs
-    GeneralizedNewtypeDeriving
+    ForeignFunctionInterface
+    GADTSyntax
+    GeneralisedNewtypeDeriving
     HexFloatLiterals
+    ImplicitParams
+    ImplicitPrelude
     ImportQualifiedPost
     InstanceSigs
     KindSignatures
     LambdaCase
+    MonomorphismRestriction
     MultiParamTypeClasses
+    NamedFieldPuns
+    NamedWildCards
     NumericUnderscores
+    OverloadedRecordDot
     OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    RelaxedPolyRec
     ScopedTypeVariables
     StandaloneDeriving
+    StandaloneKindSignatures
+    TraditionalRecordSyntax
     TupleSections
     TypeApplications
+    TypeFamilies
     TypeOperators
     TypeSynonymInstances
-    UndecidableInstances
+    ViewPatterns
+    QualifiedDo
 
   default-language:   Haskell2010
 
@@ -75,72 +98,82 @@ library
   import:          common-lang
   exposed-modules:
     PlutusInboxNfts
+    PlutusInboxNfts.Types
+    PlutusInboxNfts.Utils
   build-depends:
-    , aeson               ^>=1.5.0.0
-    , bytestring          ^>=0.10.12.0
-    , cardano-prelude
-    , containers
-    , data-default-class
-    , freer-extras
-    , freer-simple
-    , lens
-    , playground-common
-    , plutus-contract
-    , plutus-core
-    , plutus-ledger
-    , plutus-ledger-api
-    , plutus-pab
-    , plutus-tx
-    , plutus-tx-plugin
-    , prettyprinter
-    , row-types
-    , serialise
-    , servant
-    , servant-server
-    , text                ^>=1.2.4.0
-    , vector              ^>=0.12.1.2
-    , wai
-    , warp
+    plutarch
+    , generics-sop
+--  , aeson               ^>=1.5.0.0
+--  , bytestring          ^>=0.10.12.0
+--  , cardano-prelude
+--  , containers
+--  , data-default-class
+--  , freer-extras
+--  , freer-simple
+--  , lens
+--  , playground-common
+--  , plutus-contract
+--  , plutus-core
+--  , plutus-ledger
+--  , plutus-ledger-api
+--  , plutus-pab
+--  , plutus-tx
+--  , plutus-tx-plugin
+--  , prettyprinter
+--  , row-types
+--  , serialise
+--  , servant
+--  , servant-server
+--  , text                ^>=1.2.4.0
+--  , vector              ^>=0.12.1.2
+--  , wai
+--  , warp
   hs-source-dirs:  src
 
 test-suite plutus-inbox-nfts-test
   import:         common-lang
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  ghc-options:    -fplugin-opt PlutusTx.Plugin:defer-errors
+--  ghc-options:    -fplugin-opt PlutusTx.Plugin:defer-errors
+  other-modules:
+    Test.PlutusInboxNfts.Unit
+    Test.PlutusInboxNfts.Unit.Validator
+    Utils
   build-depends:
-    , aeson                        ^>=1.5.0.0
-    , base
-    , base-compat
-    , bytestring                   ^>=0.10.12.0
-    , cardano-prelude
-    , containers
-    , data-default-class
-    , either
-    , freer-extras
-    , freer-simple
-    , lens
+--  , aeson                        ^>=1.5.0.0
+--  , base
+--  , base-compat
+--  , bytestring                   ^>=0.10.12.0
+--  , cardano-prelude
+--  , containers
+--  , data-default-class
+--  , either
+--  , freer-extras
+--  , freer-simple
+--  , lens
     , plutus-inbox-nfts
-    , playground-common
-    , plutus-contract
+--  , playground-common
+--  , plutus-contract
     , plutus-core
-    , plutus-ledger
+--  , plutus-ledger
     , plutus-ledger-api
-    , plutus-pab
-    , plutus-tx
-    , plutus-tx-plugin
-    , prettyprinter
+--  , plutus-pab
+--  , plutus-tx
+--  , plutus-tx-plugin
+--  , prettyprinter
+    , plutarch
     , QuickCheck
     , quickcheck-instances
-    , row-types
-    , serialise
-    , servant
-    , servant-server
+--  , row-types
+--  , serialise
+--  , servant
+--  , servant-server
     , tasty
+    , tasty-hunit
     , tasty-quickcheck
     , text                         ^>=1.2.4.0
-    , vector                       ^>=0.12.1.2
-    , wai
-    , warp
+--  , vector                       ^>=0.12.1.2
+--  , wai
+--  , warp
 
   hs-source-dirs: test
